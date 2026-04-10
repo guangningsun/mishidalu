@@ -6,25 +6,20 @@ extends Node
 @export var map_tilemap: TileMapLayer  # 障碍物瓦片层
 
 var _nav_region: NavigationRegion2D
-var _astar: AStar2D
 
 func _ready() -> void:
 	add_to_group("navigation")  # 供 zombie 查找
 	_nav_region = $NavigationRegion2D
 	if not _nav_region:
-		push_warning("Navigation: NavigationRegion2D not found, using fallback")
-		_astar = AStar2D.new()
+		push_error("Navigation: NavigationRegion2D node not found! Add one to the scene.")
+		return
 
 ## ─── 路径查询 ─────────────────────────────────────────────────────────────
 
 func get_path(from: Vector2, to: Vector2) -> PackedVector2Array:
-	# 使用 Godot 内置导航
-	if NavigationServer2D.map_get_path:
-		var map_rid := _nav_region.get_world_2d().get_navigation_map()
-		return NavigationServer2D.map_get_path(map_rid, from, to, false)
-	else:
-		# Fallback: 直线 (如果 NavigationServer 不可用)
-		return PackedVector2Array([from, to])
+	# Godot 4.x 稳定 API: 通过 NavigationRegion2D 获取 map RID
+	var nav_map: RID = _nav_region.get_world_2d().get_navigation_map()
+	return NavigationServer2D.map_get_path(nav_map, from, to, false)
 
 ## ─── 导航网格更新 ────────────────────────────────────────────────────────
 

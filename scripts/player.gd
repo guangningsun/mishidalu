@@ -26,6 +26,7 @@ func _ready() -> void:
 	# interaction_prompt 初始隐藏
 	if interaction_prompt:
 		interaction_prompt.visible = false
+	add_to_group("player")  # 供其他系统查找
 
 func _physics_process(delta: float) -> void:
 	# 移动
@@ -52,7 +53,11 @@ func _update_interaction_prompt() -> void:
 	var nearest: Node = _get_nearest_interactable()
 	if nearest and interaction_prompt:
 		interaction_prompt.visible = true
-		interaction_prompt.text = "Press E: " + nearest.interact_prompt
+		# 调用方法获取提示文本
+		if nearest.has_method("get_interact_prompt"):
+			interaction_prompt.text = "Press E: " + nearest.get_interact_prompt()
+		else:
+			interaction_prompt.text = "Press E"
 		_last_interact_target = nearest
 	elif interaction_prompt:
 		interaction_prompt.visible = false
@@ -65,6 +70,8 @@ func _get_nearest_interactable() -> Node:
 	var min_dist := interact_range
 
 	for node in interactables:
+		if not is_instance_valid(node):
+			continue
 		var dist := global_position.distance_to(node.global_position)
 		if dist < min_dist:
 			min_dist = dist
@@ -95,7 +102,6 @@ func _shoot() -> void:
 	shoot_timer = shoot_cooldown
 
 	# 简单射击特效: 向鼠标方向"戳"一下
-	# 后续替换为实际子弹
 	print("SHOOT: dir=%s pos=%s" % [dir, shoot_origin.global_position])
 
 ## ─── 伤害 ───────────────────────────────────────────────────────────────────
